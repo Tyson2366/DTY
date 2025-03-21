@@ -14,7 +14,7 @@
 - (void)layoutSubviews {
     %orig;
 
-    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYHideFollow"]) {
+    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYHideFollowSymbol"]) {
         self.hidden = YES;
     }
 }

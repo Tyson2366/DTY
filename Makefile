@@ -16,7 +16,7 @@ include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = DYYY
 
-DYYY_FILES = DYYY.xm DYYYSettingViewController.m CityManager.m DYYYManager.m
+DYYY_FILES = Waa.xm DYYY.xm DYYYSettingViewController.m CityManager.m DYYYManager.m
 DYYY_CFLAGS = -fobjc-arc -w
 CXXFLAGS += -std=c++11
 CCFLAGS += -std=c++11

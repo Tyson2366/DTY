@@ -702,7 +702,6 @@
 %end
 
 %hook AWEMusicCoverButton
-
 - (void)layoutSubviews {
     %orig;
 
@@ -710,12 +709,11 @@
 
     if ([accessibilityLabel isEqualToString:@"音乐详情"]) {
         if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYHideMusicButton"]) {
-            [self removeFromSuperview];
+            self.alpha = 0;
             return;
         }
     }
 }
-
 %end
 
 %hook AWEPlayInteractionListenFeedView

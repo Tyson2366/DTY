@@ -1,4 +1,4 @@
-//
+//Waa自用
 #import <UIKit/UIKit.h>
 #import <objc/runtime.h>
 
@@ -14,7 +14,7 @@
 - (void)layoutSubviews {
     %orig;
 
-    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYHideFollowSymbol"]) {
+    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYHideFollow+"]) {
         self.hidden = YES;
     }
 }
@@ -51,25 +51,6 @@
     }
 }
 
-%end
-
-//隐藏右下音乐和取消静音
-@interface AFDCancelMuteAwemeView : UIView
-@end
-
-%hook AFDCancelMuteAwemeView
-- (void)layoutSubviews {
-    %orig;
-
-    UIView *superview = self.superview;
-
-    if ([superview isKindOfClass:NSClassFromString(@"AWEBaseElementView")]) {
-        if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYHideMusicButton"]) {
-            self.hidden = YES;
-            superview.hidden = YES;
-        }
-    }
-}
 %end
 
 //隐藏商店物品
@@ -110,7 +91,7 @@
 }
 %end
 
-//调整输入框透明度
+//hook UIView
 static void *HasAdjustedAlphaKey = &HasAdjustedAlphaKey;
 
 %hook UIView
@@ -119,7 +100,8 @@ static void *HasAdjustedAlphaKey = &HasAdjustedAlphaKey;
     %orig;
 
     NSString *className = NSStringFromClass([self class]);
-    
+
+    // 调整输入框透明度
     if ([className isEqualToString:@"AWECommentInputViewSwiftImpl.CommentInputViewMiddleContainer"]) {
         NSNumber *hasAdjusted = objc_getAssociatedObject(self, HasAdjustedAlphaKey);
         if (hasAdjusted && [hasAdjusted boolValue]) {
@@ -127,65 +109,82 @@ static void *HasAdjustedAlphaKey = &HasAdjustedAlphaKey;
         }
 
         for (UIView *subview in self.subviews) {
-            if ([subview isKindOfClass:[UIView class]]) {
-                if (![subview isKindOfClass:[UILabel class]] && 
-                    ![subview isKindOfClass:[UIButton class]]) {
-                    NSString *transparentValue = [[NSUserDefaults standardUserDefaults] stringForKey:@"DYYYInputBoxTransparency"];
-                    CGFloat transparency = 1.0;
-                    
-                    if (transparentValue && transparentValue.length > 0) {
-                        transparency = [transparentValue floatValue];
-                        transparency = MAX(0.0, MIN(1.0, transparency));
-                    }
-                    
-                    NSLog(@"Found AWECommentInputViewSwiftImpl_CommentInputViewMiddleContainer, setting alpha to %f for first UIView: %@", transparency, subview);
-                    subview.alpha = transparency;
-                    objc_setAssociatedObject(self, HasAdjustedAlphaKey, @(YES), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-                    break;
+            if (![subview isKindOfClass:[UILabel class]] && ![subview isKindOfClass:[UIButton class]]) {
+                NSString *transparentValue = [[NSUserDefaults standardUserDefaults] stringForKey:@"DYYYInputBoxTransparency"];
+                CGFloat transparency = 1.0;
+                
+                if (transparentValue && transparentValue.length > 0) {
+                    transparency = [transparentValue floatValue];
+                    transparency = MAX(0.0, MIN(1.0, transparency));
                 }
+                
+                subview.alpha = transparency;
+                objc_setAssociatedObject(self, HasAdjustedAlphaKey, @(YES), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+                break;
             }
+        }
+    }
+
+    // 隐藏输入框上方的横线
+    if (![[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYisEnableCommentBlur"]) {
+        return;
+    }
+
+    for (UIView *subview in self.subviews) {
+        CGRect frame = subview.frame;
+
+        // 判断 frame 是否符合目标横线的特征
+        if (frame.size.width == 430 && frame.size.height == 0.6666666666666666) {
+            subview.hidden = YES;
         }
     }
 }
 
 %end
 
-//调整输入框透明度
-static void *HasAdjustedAlphaKey = &HasAdjustedAlphaKey;
+//调整评论区透明度
+@interface AWEBaseListViewController : UIViewController
+@end
 
-%hook UIView
-
-- (void)layoutSubviews {
+%hook AWEBaseListViewController
+- (void)viewDidLayoutSubviews {
     %orig;
-
-    NSString *className = NSStringFromClass([self class]);
-    
-    if ([className isEqualToString:@"AWECommentPanelContainerSwiftImpl.CommentContainerInnerViewController"]) {
-        NSNumber *hasAdjusted = objc_getAssociatedObject(self, HasAdjustedAlphaKey);
-        if (hasAdjusted && [hasAdjusted boolValue]) {
-            return;
+    if ([self isKindOfClass:NSClassFromString(@"AWECommentPanelContainerSwiftImpl.CommentContainerInnerViewController")]) {
+        NSString *transparencyStr = [[NSUserDefaults standardUserDefaults] stringForKey:@"DYYYCommentTransparency"];
+        CGFloat transparency = 1.0;
+        
+        if (transparencyStr && transparencyStr.length > 0) {
+            transparency = [transparencyStr floatValue];
+            transparency = MAX(0.0, MIN(1.0, transparency));
         }
-
-        for (UIView *subview in self.subviews) {
-            if ([subview isKindOfClass:[UIView class]]) {
-                if (![subview isKindOfClass:[UILabel class]] && 
-                    ![subview isKindOfClass:[UIButton class]]) {
-                    NSString *transparentValue = [[NSUserDefaults standardUserDefaults] stringForKey:@"DYYYInputBoxTransparency"];
-                    CGFloat transparency = 1.0;
-                    
-                    if (transparentValue && transparentValue.length > 0) {
-                        transparency = [transparentValue floatValue];
-                        transparency = MAX(0.0, MIN(1.0, transparency));
-                    }
-                    
-                    NSLog(@"Found AWECommentInputViewSwiftImpl_CommentInputViewMiddleContainer, setting alpha to %f for first UIView: %@", transparency, subview);
-                    subview.alpha = transparency;
-                    objc_setAssociatedObject(self, HasAdjustedAlphaKey, @(YES), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-                    break;
-                }
+        
+        for (UIView *subview in self.view.subviews) {
+            if ([subview isKindOfClass:[UIVisualEffectView class]]) {
+                subview.alpha = transparency;
             }
         }
     }
 }
+%end
 
+
+//隐藏音乐按钮
+@interface AFDCancelMuteAwemeView : UIView
+@end
+
+%hook AFDCancelMuteAwemeView
+- (void)willMoveToSuperview:(UIView *)newSuperview {
+    %orig;
+
+    if (newSuperview == nil && [[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYHideMusicButton"]) {
+
+        UIView *superview = self.superview;
+        if ([superview isKindOfClass:NSClassFromString(@"AWEBaseElementView")]) {
+            [superview removeFromSuperview];
+            return;
+
+        }
+
+    }
+}
 %end

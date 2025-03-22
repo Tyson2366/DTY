@@ -1,4 +1,4 @@
-//Waa自用
+//Modified By @Waa
 #import <UIKit/UIKit.h>
 #import <objc/runtime.h>
 
@@ -10,15 +10,14 @@
 @end
 
 %hook LOTAnimationView
-
 - (void)layoutSubviews {
     %orig;
 
     if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYHideFollow+"]) {
-        self.hidden = YES;
+        [self removeFromSuperview];
+        return;
     }
 }
-
 %end
 
 //隐藏弹幕按钮
@@ -168,7 +167,7 @@ static void *HasAdjustedAlphaKey = &HasAdjustedAlphaKey;
 %end
 
 
-//隐藏音乐按钮
+//隐藏右下音乐
 @interface AFDCancelMuteAwemeView : UIView
 @end
 

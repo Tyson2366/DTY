@@ -204,16 +204,37 @@ typedef NS_ENUM(NSInteger, DYYYSettingItemType) {
 }
 
 - (void)setupFooterLabel {
-    self.footerLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 50)];
-    self.footerLabel.text = [NSString stringWithFormat:@"Developer By @huamidev\nVersion: %@ (%@)", @"2.1-7", @"2503End\nModified by Waa"];
-    self.footerLabel.textAlignment = NSTextAlignmentCenter;
-    self.footerLabel.font = [UIFont systemFontOfSize:14 weight:UIFontWeightRegular];
-    self.footerLabel.textColor = [UIColor colorWithRed:173/255.0 green:216/255.0 blue:230/255.0 alpha:1.0];
-    self.footerLabel.numberOfLines = 2;
-    self.footerLabel.lineBreakMode = NSLineBreakByWordWrapping;
-    self.tableView.tableFooterView = self.footerLabel;
-}
+    NSString *footerText = [NSString stringWithFormat:@"Developer By @huamidev\nVersion: %@ (%@)\n%@", @"2.1-7", @"2503End", @"Modified By @Waa"];
 
+    UIFont *font = [UIFont systemFontOfSize:14 weight:UIFontWeightRegular];
+    NSDictionary *attributes = @{
+        NSFontAttributeName: font,
+        NSForegroundColorAttributeName: [UIColor colorWithRed:173/255.0 green:216/255.0 blue:230/255.0 alpha:1.0]
+    };
+
+    CGFloat maxWidth = self.view.bounds.size.width - 32;
+    CGRect textRect = [footerText boundingRectWithSize:CGSizeMake(maxWidth, CGFLOAT_MAX)
+                                              options:NSStringDrawingUsesLineFragmentOrigin
+                                           attributes:attributes
+                                              context:nil];
+
+    CGFloat footerHeight = textRect.size.height + 32;
+
+    self.footerLabel = [[UILabel alloc] initWithFrame:CGRectMake(16, 16, maxWidth, textRect.size.height)];
+    self.footerLabel.text = footerText;
+    self.footerLabel.textAlignment = NSTextAlignmentCenter;
+    self.footerLabel.font = font;
+    self.footerLabel.textColor = [UIColor colorWithRed:173/255.0 green:216/255.0 blue:230/255.0 alpha:1.0];
+    self.footerLabel.numberOfLines = 0;
+    self.footerLabel.lineBreakMode = NSLineBreakByWordWrapping;
+
+    UIView *footerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, footerHeight)];
+    [footerView addSubview:self.footerLabel];
+
+    self.footerLabel.center = CGPointMake(footerView.bounds.size.width / 2, footerView.bounds.size.height / 2);
+
+    self.tableView.tableFooterView = footerView;
+}
 
 - (void)addTitleGradientAnimation {
     CAGradientLayer *gradient = [CAGradientLayer layer];

@@ -187,34 +187,3 @@ static void *HasAdjustedAlphaKey = &HasAdjustedAlphaKey;
     }
 }
 %end
-#import <UIKit/UIKit.h>
-
-// 16 进制颜色转换方法
-UIColor* colorFromHex(int hexValue) {
-    return [UIColor colorWithRed:((hexValue >> 16) & 0xFF) / 255.0
-                           green:((hexValue >> 8) & 0xFF) / 255.0
-                            blue:(hexValue & 0xFF) / 255.0
-                           alpha:1.0];
-}
-
-// Hook UILabel 修改特定类名的文字颜色
-%hook UILabel
-
-- (void)didMoveToSuperview {
-    %orig;
-
-    NSString *className = NSStringFromClass([self class]);
-
-    // 目标类名及对应颜色 (16 进制)
-    NSDictionary *colorMapping = @{
-        @"AWECommentSwiftBizUI.CommentInteractionBaseLabel": colorFromHex(0xFF5733), // 名字、时间/IP、回复（橙红色）
-        @"AWECommentPanelListSwiftImpl.BaseCellCommentLabel": colorFromHex(0x3498DB) // 评论内容（蓝色）
-    };
-
-    UIColor *newColor = colorMapping[className];
-    if (newColor) {
-        self.textColor = newColor;
-    }
-}
-
-%end

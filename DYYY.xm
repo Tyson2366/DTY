@@ -699,22 +699,7 @@
 
 }
 
-%end
-
-%hook AWEMusicCoverButton
-- (void)layoutSubviews {
-    %orig;
-
-    NSString *accessibilityLabel = self.accessibilityLabel;
-
-    if ([accessibilityLabel isEqualToString:@"音乐详情"]) {
-        if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYHideMusicButton"]) {
-            self.alpha = 0;
-            return;
-        }
-    }
-}
-%end
+%end 
 
 %hook AWEPlayInteractionListenFeedView
 - (void)layoutSubviews {
@@ -974,86 +959,6 @@
     return r;
 }
 
-%end
-
-%hook AWEPlayInteractionUserAvatarElement
-
-- (void)onFollowViewClicked:(UITapGestureRecognizer *)gesture {
-//    NSLog(@"拦截到关注按钮点击");
-    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYfollowTips"]) {
-        
-        dispatch_async(dispatch_get_main_queue(), ^{
-            UIAlertController *alertController = [UIAlertController
-                                                  alertControllerWithTitle:@"关注确认"
-                                                  message:@"是否确认关注？"
-                                                  preferredStyle:UIAlertControllerStyleAlert];
-            
-            UIAlertAction *cancelAction = [UIAlertAction
-                                           actionWithTitle:@"取消"
-                                           style:UIAlertActionStyleCancel
-                                           handler:nil];
-            
-            UIAlertAction *confirmAction = [UIAlertAction
-                                            actionWithTitle:@"确定"
-                                            style:UIAlertActionStyleDefault
-                                            handler:^(UIAlertAction * _Nonnull action) {
-                %orig(gesture);
-            }];
-            
-            [alertController addAction:cancelAction];
-            [alertController addAction:confirmAction];
-            
-            UIViewController *topController = [DYYYManager getActiveTopController];
-            if (topController) {
-                [topController presentViewController:alertController animated:YES completion:nil];
-            }
-        });
-    }else {
-        %orig;
-    }
-}
-
-%end
-
-%hook AWEFeedVideoButton
-- (id)touchUpInsideBlock {
-    id r = %orig;
-    
-    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYcollectTips"] && [self.accessibilityLabel isEqualToString:@"收藏"]) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            UIAlertController *alertController = [UIAlertController
-                                                  alertControllerWithTitle:@"收藏确认"
-                                                  message:@"是否[确认/取消]收藏？"
-                                                  preferredStyle:UIAlertControllerStyleAlert];
-
-            UIAlertAction *cancelAction = [UIAlertAction
-                                           actionWithTitle:@"取消"
-                                           style:UIAlertActionStyleCancel
-                                           handler:nil];
-
-            UIAlertAction *confirmAction = [UIAlertAction
-                                            actionWithTitle:@"确定"
-                                            style:UIAlertActionStyleDefault
-                                            handler:^(UIAlertAction * _Nonnull action) {
-                if (r && [r isKindOfClass:NSClassFromString(@"NSBlock")]) {
-                    ((void(^)(void))r)();
-                }
-            }];
-
-            [alertController addAction:cancelAction];
-            [alertController addAction:confirmAction];
-
-            UIViewController *topController = [DYYYManager getActiveTopController];
-            if (topController) {
-                [topController presentViewController:alertController animated:YES completion:nil];
-            }
-        });
-
-        return nil; // 阻止原始 block 立即执行
-    }
-
-    return r;
-}
 %end
 
 %hook AWEFeedProgressSlider
@@ -1344,19 +1249,6 @@
 
 %end
 
-%hook AWEFeedTemplateAnchorView
-
-- (void)layoutSubviews {
-    %orig;
-
-    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYHideLocation"]) {
-        [self removeFromSuperview];
-        return;
-    }
-}
-
-%end
-
 %hook AWEPlayInteractionSearchAnchorView
 
 - (void)layoutSubviews {
@@ -1368,22 +1260,6 @@
     }
 }
 
-%end
-
-%hook AWEAwemeMusicInfoView
-
-- (void)layoutSubviews {
-    %orig;
-
-    UIView *superview = self.superview;
-
-    if ([superview isKindOfClass:NSClassFromString(@"AWEBaseElementView")]) {
-        if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYHideQuqishuiting"]) {
-            self.hidden = YES;
-            superview.hidden = YES;
-        }
-    }
-}
 %end
 
 %hook AWETemplateHotspotView

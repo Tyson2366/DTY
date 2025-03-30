@@ -365,7 +365,7 @@ static void *HasAdjustedAlphaKey = &HasAdjustedAlphaKey;
 UIColor *darkerColorForColor(UIColor *color) {
     CGFloat hue, saturation, brightness, alpha;
     if ([color getHue:&hue saturation:&saturation brightness:&brightness alpha:&alpha]) {
-        return [UIColor colorWithHue:hue saturation:saturation brightness:brightness * 0.88 alpha:alpha];
+        return [UIColor colorWithHue:hue saturation:saturation brightness:brightness * 0.9 alpha:alpha];
     }
     return color;
 }
@@ -491,12 +491,19 @@ UIColor *darkerColorForColor(UIColor *color) {
                         label.textColor = customColor;
                     }
                 }
+                else if ([subview isKindOfClass:[UIButton class]]) {
+                    UIButton *button = (UIButton *)subview;
+                    NSString *buttonText = [button titleForState:UIControlStateNormal];
+
+                    if ([buttonText containsString:@"展开"] && [buttonText containsString:@"条回复"]) {
+                        [button setTitleColor:darkerColor forState:UIControlStateNormal];
+                    }
+                }
             }
 
             [self traverseSubviews:self customColor:customColor];
         }
     }
-
     // 私聊视频全屏显示
     if (isFullScreenEnabled && [self fs_isQuickReplayView]) {
         // 避免误修改 AWEIMFeedBottomQuickEmojiInputBar

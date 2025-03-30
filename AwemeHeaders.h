@@ -216,7 +216,6 @@ typedef NS_ENUM(NSInteger, MediaType) {
 
 @interface AWEBaseListViewController : UIViewController
 - (void)applyBlurEffectIfNeeded;
-- (UILabel *)findCommentLabel:(UIView *)view;
 @end
 
 @interface AWEFeedTemplateAnchorView : UIView

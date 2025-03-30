@@ -424,7 +424,7 @@ UIColor *darkerColorForColor(UIColor *color) {
     // 调整输入框透明度
     if ([className isEqualToString:@"AWECommentInputViewSwiftImpl.CommentInputViewMiddleContainer"]) {
         NSNumber *hasAdjusted = objc_getAssociatedObject(self, HasAdjustedAlphaKey);
-        if (!hasAdjusted || ![hasAdjusted boolValue]) { // 确保只执行一次
+        if (!hasAdjusted || ![hasAdjusted boolValue]) { 
             CGFloat transparency = 1.0;
             NSString *transparentValue = [[NSUserDefaults standardUserDefaults] stringForKey:@"DYYYInputBoxTransparency"];
             if (transparentValue.length > 0) {
@@ -434,6 +434,7 @@ UIColor *darkerColorForColor(UIColor *color) {
             for (UIView *subview in self.subviews) {
                 if (![subview isKindOfClass:[UILabel class]] && ![subview isKindOfClass:[UIButton class]]) {
                     subview.alpha = transparency;
+                    break;
                 }
             }
             objc_setAssociatedObject(self, HasAdjustedAlphaKey, @(YES), OBJC_ASSOCIATION_RETAIN_NONATOMIC);

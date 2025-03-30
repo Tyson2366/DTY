@@ -462,6 +462,80 @@
 
 %end
 
+static BOOL isCommentContainerDarkMode = YES;
+
+%hook UIView
+- (void)layoutSubviews {
+    %orig;
+
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+
+    NSString *className = NSStringFromClass([self class]);
+
+    // 处理深色键盘
+    if ([defaults boolForKey:@"DYYYisDarkKeyBoard"]) {
+        for (UIView *subview in self.subviews) {
+            if ([subview isKindOfClass:NSClassFromString(@"AWECommentInputViewSwiftImpl.CommentInputViewMiddleContainer")]) {
+                for (UIView *innerSubview in subview.subviews) {
+                    if ([innerSubview isKindOfClass:[UIView class]]) {
+                        innerSubview.backgroundColor = [UIColor colorWithRed:31/255.0 green:33/255.0 blue:35/255.0 alpha:1.0];
+                        break;
+                    }
+                }
+            }
+            if ([subview isKindOfClass:NSClassFromString(@"AWEIMEmoticonPanelBoxView")]) {
+                subview.backgroundColor = [UIColor colorWithRed:33/255.0 green:33/255.0 blue:33/255.0 alpha:1.0];
+            }
+        }
+    }
+
+    // 处理全屏 & 评论模糊
+    if ([defaults boolForKey:@"DYYYisEnableFullScreen"] || [defaults boolForKey:@"DYYYisEnableCommentBlur"]) {
+        if ([className isEqualToString:@"AWECommentInputViewSwiftImpl.CommentInputContainerView"]) {
+            for (UIView *subview in self.subviews) {
+                if ([subview isKindOfClass:[UIView class]] && subview.backgroundColor) {
+                    CGFloat red = 0, green = 0, blue = 0, alpha = 0;
+                    [subview.backgroundColor getRed:&red green:&green blue:&blue alpha:&alpha];
+
+                    if ((red == 22/255.0 && green == 22/255.0 && blue == 22/255.0) || 
+                        (red == 1.0 && green == 1.0 && blue == 1.0)) {
+                        subview.backgroundColor = [UIColor clearColor];
+                    }
+                }
+            }
+        }
+
+        UIViewController *vc = [self firstAvailableUIViewController];
+        if ([vc isKindOfClass:%c(AWEPlayInteractionViewController)]) {
+            BOOL shouldHideSubview = [defaults boolForKey:@"DYYYisEnableFullScreen"] || 
+                                     [defaults boolForKey:@"DYYYisEnableCommentBlur"];
+
+            if (shouldHideSubview) {
+                for (UIView *subview in self.subviews) {
+                    if ([subview isKindOfClass:[UIView class]] && 
+                        subview.backgroundColor && 
+                        CGColorEqualToColor(subview.backgroundColor.CGColor, [UIColor blackColor].CGColor)) {
+                        subview.hidden = YES;
+                    }
+                }
+            }
+        }
+    }
+
+    if ([className containsString:@"CommentInputViewMiddleContainer"]) {
+        UIView *firstSubview = self.subviews.firstObject;
+        if (firstSubview && [firstSubview isKindOfClass:[UIView class]]) {
+            UIColor *backgroundColor = firstSubview.backgroundColor;
+            if (backgroundColor) {
+                CGFloat red, green, blue, alpha;
+                [backgroundColor getRed:&red green:&green blue:&blue alpha:&alpha];
+                isCommentContainerDarkMode = (red < 0.3 && green < 0.3 && blue < 0.3);
+            }
+        }
+    }
+}
+%end
+
 %hook AWEBaseListViewController
 - (void)viewDidLayoutSubviews {
     %orig;
@@ -470,7 +544,9 @@
 
 - (void)viewDidAppear:(BOOL)animated {
     %orig;
-    [self applyBlurEffectIfNeeded];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self applyBlurEffectIfNeeded];
+    });
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -480,7 +556,7 @@
 
 %new
 - (void)applyBlurEffectIfNeeded {
-    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYisEnableCommentBlur"] && 
+    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYisEnableCommentBlur"] &&
         [self isKindOfClass:NSClassFromString(@"AWECommentPanelContainerSwiftImpl.CommentContainerInnerViewController")]) {
         
         self.view.backgroundColor = [UIColor clearColor];
@@ -497,22 +573,9 @@
                 break;
             }
         }
-        
-        BOOL isDarkMode = YES;
-        
-        UILabel *commentLabel = [self findCommentLabel:self.view];
-        if (commentLabel) {
-            UIColor *textColor = commentLabel.textColor;
-            CGFloat red, green, blue, alpha;
-            [textColor getRed:&red green:&green blue:&blue alpha:&alpha];
-            
-            if (red > 0.7 && green > 0.7 && blue > 0.7) {
-                isDarkMode = YES;
-            } else if (red < 0.3 && green < 0.3 && blue < 0.3) {
-                isDarkMode = NO;
-            }
-        }
-        
+
+        BOOL isDarkMode = isCommentContainerDarkMode;
+
         UIBlurEffectStyle blurStyle = isDarkMode ? UIBlurEffectStyleDark : UIBlurEffectStyleLight;
         
         if (!existingBlurView) {
@@ -544,25 +607,6 @@
             [self.view insertSubview:existingBlurView atIndex:0];
         }
     }
-}
-
-%new
-- (UILabel *)findCommentLabel:(UIView *)view {
-    if ([view isKindOfClass:[UILabel class]]) {
-        UILabel *label = (UILabel *)view;
-        if (label.text && ([label.text hasSuffix:@"条评论"] || [label.text hasSuffix:@"暂无评论"])) {
-            return label;
-        }
-    }
-    
-    for (UIView *subview in view.subviews) {
-        UILabel *result = [self findCommentLabel:subview];
-        if (result) {
-            return result;
-        }
-    }
-    
-    return nil;
 }
 %end
 
@@ -844,60 +888,6 @@
         for (UIView *subview in self.subviews) {
             if ([subview isKindOfClass:[UICollectionView class]]) {
                 subview.backgroundColor = [UIColor colorWithRed:115/255.0 green:115/255.0 blue:115/255.0 alpha:1.0];
-            }
-        }
-    }
-}
-%end
-
-%hook UIView
-- (void)layoutSubviews {
-    %orig;
-    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYisDarkKeyBoard"]) {
-        for (UIView *subview in self.subviews) {
-            if ([subview isKindOfClass:NSClassFromString(@"AWECommentInputViewSwiftImpl.CommentInputViewMiddleContainer")]) {
-                for (UIView *innerSubview in subview.subviews) {
-                    if ([innerSubview isKindOfClass:[UIView class]]) {
-                        innerSubview.backgroundColor = [UIColor colorWithRed:31/255.0 green:33/255.0 blue:35/255.0 alpha:1.0];
-                        break;
-                    }
-                }
-            }
-            if ([subview isKindOfClass:NSClassFromString(@"AWEIMEmoticonPanelBoxView")]) {
-                subview.backgroundColor = [UIColor colorWithRed:33/255.0 green:33/255.0 blue:33/255.0 alpha:1.0];
-            }
-        }
-    }
-    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYisEnableFullScreen"] || 
-    [[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYisEnableCommentBlur"]) {
-        NSString *className = NSStringFromClass([self class]);
-        if ([className isEqualToString:@"AWECommentInputViewSwiftImpl.CommentInputContainerView"]) {
-            for (UIView *subview in self.subviews) {
-                if ([subview isKindOfClass:[UIView class]] && subview.backgroundColor) {
-                    CGFloat red = 0, green = 0, blue = 0, alpha = 0;
-                    [subview.backgroundColor getRed:&red green:&green blue:&blue alpha:&alpha];
-                    
-                    if ((red == 22/255.0 && green == 22/255.0 && blue == 22/255.0) || 
-                        (red == 1.0 && green == 1.0 && blue == 1.0)) {
-                        subview.backgroundColor = [UIColor clearColor];
-                    }
-                }
-            }
-        }
-        
-        UIViewController *vc = [self firstAvailableUIViewController];
-        if ([vc isKindOfClass:%c(AWEPlayInteractionViewController)]) {
-            BOOL shouldHideSubview = [[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYisEnableFullScreen"] || 
-                                [[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYisEnableCommentBlur"];
-
-            if (shouldHideSubview) {
-                for (UIView *subview in self.subviews) {
-                    if ([subview isKindOfClass:[UIView class]] && 
-                        subview.backgroundColor && 
-                        CGColorEqualToColor(subview.backgroundColor.CGColor, [UIColor blackColor].CGColor)) {
-                        subview.hidden = YES;
-                    }
-                }
             }
         }
     }

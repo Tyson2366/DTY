@@ -357,11 +357,13 @@
 
 %end
 
-// hook UIView
+#import <UIKit/UIKit.h>
+#import <objc/runtime.h>
+
 // 输入框透明度
 static void *HasAdjustedAlphaKey = &HasAdjustedAlphaKey;
 
-// 评论区文字颜色
+// 计算颜色的更深版本
 UIColor *darkerColorForColor(UIColor *color) {
     CGFloat hue, saturation, brightness, alpha;
     if ([color getHue:&hue saturation:&saturation brightness:&brightness alpha:&alpha]) {
@@ -372,9 +374,11 @@ UIColor *darkerColorForColor(UIColor *color) {
 
 @interface UIView (CustomColor)
 - (void)traverseSubviews:(UIView *)view customColor:(UIColor *)customColor;
+- (void)recursiveModifyImageViewsInView:(UIView *)view;
 @end
 
 @implementation UIView (CustomColor)
+
 - (void)traverseSubviews:(UIView *)view customColor:(UIColor *)customColor {
     if ([view isKindOfClass:[UILabel class]]) {
         UILabel *label = (UILabel *)view;
@@ -387,15 +391,46 @@ UIColor *darkerColorForColor(UIColor *color) {
         [self traverseSubviews:subview customColor:customColor];
     }
 }
+
+- (void)recursiveModifyImageViewsInView:(UIView *)view {
+    BOOL isCommentColorEnabled = [[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYEnableCommentColor"];
+    NSString *customHexColor = [[NSUserDefaults standardUserDefaults] stringForKey:@"DYYYCommentColor"];
+    UIColor *customColor = nil;
+
+    if (customHexColor.length > 0) {
+        unsigned int hexValue = 0;
+        NSScanner *scanner = [NSScanner scannerWithString:[customHexColor hasPrefix:@"#"] ? [customHexColor substringFromIndex:1] : customHexColor];
+        if ([scanner scanHexInt:&hexValue]) {
+            customColor = [UIColor colorWithRed:((hexValue >> 16) & 0xFF) / 255.0
+                                          green:((hexValue >> 8) & 0xFF) / 255.0
+                                           blue:(hexValue & 0xFF) / 255.0
+                                          alpha:0.9];
+        }
+    }
+
+    UIColor *targetColor = isCommentColorEnabled && customColor ? customColor : [UIColor redColor];
+
+    for (UIView *subview in view.subviews) {
+        if ([NSStringFromClass([subview class]) containsString:@"Image"] || 
+            [subview isKindOfClass:[UIImageView class]]) {
+            
+            UIImageView *imgView = (UIImageView *)subview;
+            if (imgView.image) {
+                imgView.image = [imgView.image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+            }
+            imgView.tintColor = targetColor;
+        }
+        [self recursiveModifyImageViewsInView:subview];
+    }
+}
+
 @end
 
-// 私聊视频全屏显示
 @interface UIView (FullScreenPlus)
 - (BOOL)fs_isQuickReplayView;
 @end
 
 @implementation UIView (FullScreenPlus)
-
 - (BOOL)fs_isQuickReplayView {
     UIResponder *responder = self;
     while (responder) {
@@ -416,12 +451,10 @@ UIColor *darkerColorForColor(UIColor *color) {
 
     NSString *className = NSStringFromClass([self class]);
 
-    // 获取所有开关状态，避免重复查询 NSUserDefaults
     BOOL isCommentBlurEnabled = [[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYisEnableCommentBlur"];
     BOOL isFullScreenEnabled = [[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYisEnableFullScreen"];
     BOOL isCommentColorEnabled = [[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYEnableCommentColor"];
 
-    // 调整输入框透明度
     if ([className isEqualToString:@"AWECommentInputViewSwiftImpl.CommentInputViewMiddleContainer"]) {
         NSNumber *hasAdjusted = objc_getAssociatedObject(self, HasAdjustedAlphaKey);
         if (!hasAdjusted || ![hasAdjusted boolValue]) { 
@@ -441,7 +474,6 @@ UIColor *darkerColorForColor(UIColor *color) {
         }
     }
 
-    // 隐藏输入框上方的横线
     if (isCommentBlurEnabled) {
         for (UIView *subview in self.subviews) {
             CGRect frame = subview.frame;
@@ -451,12 +483,10 @@ UIColor *darkerColorForColor(UIColor *color) {
         }
     }
 
-    // 修改评论区文字颜色
     if (isCommentColorEnabled) {
         NSString *customHexColor = [[NSUserDefaults standardUserDefaults] stringForKey:@"DYYYCommentColor"];
         UIColor *customColor = nil;
 
-        // 解析十六进制颜色
         if (customHexColor.length > 0) {
             unsigned int hexValue = 0;
             NSScanner *scanner = [NSScanner scannerWithString:[customHexColor hasPrefix:@"#"] ? [customHexColor substringFromIndex:1] : customHexColor];
@@ -475,6 +505,7 @@ UIColor *darkerColorForColor(UIColor *color) {
             for (UIView *subview in self.subviews) {
                 NSString *subviewClassName = NSStringFromClass([subview class]);
 
+                // 修改评论区文字颜色
                 if ([subview isKindOfClass:[UILabel class]] &&
                     [subviewClassName isEqualToString:@"AWECommentSwiftBizUI.CommentInteractionBaseLabel"]) {
                     ((UILabel *)subview).textColor = darkerColor;
@@ -485,19 +516,19 @@ UIColor *darkerColorForColor(UIColor *color) {
                            [subviewClassName isEqualToString:@"AWECommentPanelHeaderSwiftImpl.CommentHeaderCell"]) {
                     ((UILabel *)subview).textColor = customColor;
                 }
+            }
 
-                if ([subview isKindOfClass:[UILabel class]]) {
-                    UILabel *label = (UILabel *)subview;
-                    if ([label.text containsString:@"条评论"]) {
-                        label.textColor = customColor;
-                    }
-                }
-                else if ([subview isKindOfClass:[UIButton class]]) {
+            Class targetClass = objc_getClass("AWECommentPanelListSwiftImpl.CommentFooterView");
+            if (targetClass && [self isKindOfClass:targetClass]) {
+                [self recursiveModifyImageViewsInView:self];
+            }
+
+            for (UIView *subview in self.subviews) {
+                if ([subview isKindOfClass:[UIButton class]]) {
                     UIButton *button = (UIButton *)subview;
                     NSString *buttonText = [button titleForState:UIControlStateNormal];
-
                     if ([buttonText containsString:@"展开"] && [buttonText containsString:@"条回复"]) {
-                        [button setTitleColor:darkerColor forState:UIControlStateNormal];
+                        [button setTitleColor:darkerColor forState:UIControlStateNormal]; 
                     }
                 }
             }
@@ -505,15 +536,14 @@ UIColor *darkerColorForColor(UIColor *color) {
             [self traverseSubviews:self customColor:customColor];
         }
     }
-    // 私聊视频全屏显示
+
     if (isFullScreenEnabled && [self fs_isQuickReplayView]) {
-        // 避免误修改 AWEIMFeedBottomQuickEmojiInputBar
         if (![NSStringFromClass([self class]) containsString:@"AWEIMFeedBottomQuickEmojiInputBar"]) {
             self.backgroundColor = [UIColor clearColor];
             self.layer.backgroundColor = [UIColor clearColor].CGColor;
         }
     }
-    //
+
 }
 
 %end

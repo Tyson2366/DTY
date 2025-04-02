@@ -352,6 +352,7 @@
     BOOL shouldModify = NO;
     NSString *transparencyKey = nil;
 
+    NSString *className = NSStringFromClass([self class]);
     UIResponder *responder = self.nextResponder;
     BOOL isInCommentPanel = [responder isKindOfClass:NSClassFromString(@"AWECommentPanelContainerSwiftImpl.CommentContainerInnerViewController")];
 
@@ -368,7 +369,7 @@
         superview = superview.superview;
     }
 
-    if (isFirstSubviewOfMiddleContainer || [NSStringFromClass([self class]) isEqualToString:@"AWECommentInputViewSwiftImpl.CommentInputViewMiddleContainer"]) {
+    if (isFirstSubviewOfMiddleContainer || [className isEqualToString:@"AWECommentInputViewSwiftImpl.CommentInputViewMiddleContainer"]) {
         transparencyKey = @"DYYYInputBoxTransparency";
         shouldModify = YES;
     } else if (isInCommentPanel || isFirstSubviewOfCommentInputView) {
@@ -378,6 +379,9 @@
 
     if (shouldModify && transparencyKey) {
         transparency = [[NSUserDefaults standardUserDefaults] floatForKey:transparencyKey];
+        if ([[NSUserDefaults standardUserDefaults] objectForKey:transparencyKey] == nil) {
+            transparency = 1.0;
+        }
         transparency = (transparency >= 0.0 && transparency <= 1.0) ? transparency : 1.0;
 
         CGFloat r, g, b, a;

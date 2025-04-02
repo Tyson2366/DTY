@@ -20,7 +20,7 @@
         UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(dismiss)];
         [self addGestureRecognizer:tap];
 
-        CGFloat height = 250;
+        CGFloat height = 230;
         containerView = [[UIView alloc] initWithFrame:CGRectMake(6, self.frame.size.height, self.frame.size.width - 12, height)];
         containerView.backgroundColor = [UIColor whiteColor];
         containerView.layer.cornerRadius = 50;
@@ -31,14 +31,14 @@
         [containerView addGestureRecognizer:panGesture];
 
         // 标题
-        UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 25, containerView.frame.size.width - 60, 24)];
+        UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 15, containerView.frame.size.width - 60, 24)];
         titleLabel.text = title;
         titleLabel.textAlignment = NSTextAlignmentCenter;
         titleLabel.font = [UIFont boldSystemFontOfSize:18];
         titleLabel.center = CGPointMake(containerView.frame.size.width / 2, titleLabel.center.y);
 
         // 内容
-        UILabel *messageLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, CGRectGetMaxY(titleLabel.frame) + 30, containerView.frame.size.width - 60, 60)];
+        UILabel *messageLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, CGRectGetMaxY(titleLabel.frame) + 20, containerView.frame.size.width - 60, 60)];
         messageLabel.text = message;
         messageLabel.textAlignment = NSTextAlignmentCenter;
         messageLabel.font = [UIFont systemFontOfSize:17];
@@ -47,12 +47,12 @@
         messageLabel.center = CGPointMake(containerView.frame.size.width / 2, messageLabel.center.y);
 
         // 确定按钮
-        UIButton *confirmButton = [[UIButton alloc] initWithFrame:CGRectMake(containerView.frame.size.width * 0.52, CGRectGetMaxY(messageLabel.frame) + 30, containerView.frame.size.width * 0.4, 50)];
+        UIButton *confirmButton = [[UIButton alloc] initWithFrame:CGRectMake(containerView.frame.size.width * 0.52, containerView.frame.size.height - 75, containerView.frame.size.width * 0.4, 50)];
         // confirmButton.center = CGPointMake(containerView.frame.size.width / 2, confirmButton.center.y);
         [confirmButton setTitle:confirmTitle forState:UIControlStateNormal];
         [confirmButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
         confirmButton.backgroundColor = [UIColor colorWithRed:254/255.0 green:47/255.0 blue:85/255.0 alpha:1.0];
-        confirmButton.layer.cornerRadius = 10;
+        confirmButton.layer.cornerRadius = 14;
         confirmButton.titleLabel.font = [UIFont boldSystemFontOfSize:16];
         [confirmButton addTarget:self action:@selector(confirmTapped) forControlEvents:UIControlEventTouchUpInside];
 
@@ -62,7 +62,7 @@
         [cancelButton setTitle:@"取消" forState:UIControlStateNormal];
         [cancelButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
         cancelButton.backgroundColor = [UIColor colorWithWhite:0.95 alpha:1.0];
-        cancelButton.layer.cornerRadius = 10;
+        cancelButton.layer.cornerRadius = 14;
         cancelButton.titleLabel.font = [UIFont systemFontOfSize:16];
         [cancelButton addTarget:self action:@selector(dismiss) forControlEvents:UIControlEventTouchUpInside];
 

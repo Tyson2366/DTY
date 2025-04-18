@@ -16,7 +16,7 @@
 - (void)loadCityData {
     self.cityCodeMap = 
 @{
-    @"110101001": @{@"province": @"北京市", @"city": @"市辖区", @"district": @"东城区", @"street": @"东华门街道"},
+@"110101001": @{@"province": @"北京市", @"city": @"市辖区", @"district": @"东城区", @"street": @"东华门街道"},
 @"110101002": @{@"province": @"北京市", @"city": @"市辖区", @"district": @"东城区", @"street": @"景山街道"},
 @"110101003": @{@"province": @"北京市", @"city": @"市辖区", @"district": @"东城区", @"street": @"交道口街道"},
 @"110101004": @{@"province": @"北京市", @"city": @"市辖区", @"district": @"东城区", @"street": @"安定门街道"},
